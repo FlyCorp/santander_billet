@@ -38,14 +38,13 @@ class Santander
      *     'client_id' => 'meu-client-id-123',
      *     'client_secret' => 'meu-client-secret-456'
      * ], [
-     *     CURLOPT_SSLCERTTYPE => 'P12',
-     *     CURLOPT_SSL_VERIFYHOST => 2
+     *     CURLOPT_SSLCERTTYPE => 'P12'
      * ]);
      * 
      * @throws \RuntimeException Se alguma configuração obrigatória estiver faltando
      * @throws \InvalidArgumentException Se CURLOPT_SSLCERTTYPE não estiver nas opções cURL
      */
-    public function __construct(array $config = null, array $curlOptions = null)
+    public function __construct(array $config = null, array $curlOptions = [CURLOPT_SSLCERTTYPE => 'P12'])
     {
         // Usa configuração padrão do arquivo de configuração se nenhuma for fornecida
         $this->config = $config ?? config('santander_billet.integrations');
@@ -60,26 +59,22 @@ class Santander
 
         $certificatePath = storage_path($this->config['certificate_path']);
 
-        // Configura as opções cURL - usa as personalizadas ou as padrão
-        $defaultCurlOptions = [
-            CURLOPT_SSLCERTTYPE => 'P12',
-        ];
-        
-        $finalCurlOptions = $curlOptions ?? $defaultCurlOptions;
         
         // Valida se CURLOPT_SSLCERTTYPE está presente
-        if (!array_key_exists(CURLOPT_SSLCERTTYPE, $finalCurlOptions)) {
+        if (!array_key_exists(CURLOPT_SSLCERTTYPE, $curlOptions)) {
             throw new \InvalidArgumentException("A opção CURLOPT_SSLCERTTYPE é obrigatória nas configurações cURL");
         }
 
         $clientConfig = [
             'base_uri' => $this->config['host'],
-            'cert' => [$certificatePath, $this->config['certificate_auth']],
-            'curl' => $finalCurlOptions,
+            'curl' => $curlOptions,
         ];
         // Adiciona a chave SSL se estiver configurada caso o formato do certificado não seja P12 e sim PEM
-        if(isset($this->config['ssl_key'])){
-            $clientConfig['ssl_key'] = storage_path($this->config['ssl_key']);
+        if($curlOptions[CURLOPT_SSLCERTTYPE] !== 'P12' && isset($this->config['ssl_key'])) {
+            $clientConfig['cert'] = $certificatePath;
+            $clientConfig['ssl_key'] = storage_path($this->config['certificate_auth']);
+        }else{
+            $clientConfig['cert'] = [$certificatePath, $this->config['certificate_auth']];
         }
 
         // Inicializa o cliente HTTP com as configurações de certificado

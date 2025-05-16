@@ -7,7 +7,6 @@ return [
         'client_id' => env('SANTANDER_BILLET_CLIENT_ID'),
         'client_secret' => env('SANTANDER_BILLET_CLIENT_SECRET'),
         'certificate_auth' => env('SANTANDER_BILLET_CERTIFICATE_AUTH'),
-        'certificate_path' => env('SANTANDER_BILLET_CERTIFICATE_PATH'),
-        'ssl_key' => env('SANTANDER_BILLET_CERTIFICATE_SSL_KEY'),
+        'certificate_path' => env('SANTANDER_BILLET_CERTIFICATE_PATH')
     ]
 ];
