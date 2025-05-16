@@ -32,8 +32,8 @@ class Billet {
         $this->key = new Key();
     }
 
-    public function toArray() {
-        return [
+    public function toArray():array {
+        $array = [
             "environment" => $this->environment,
             "nsuCode" => $this->nsuCode,
             "nsuDate" => $this->nsuDate,
@@ -50,9 +50,14 @@ class Billet {
             "deductionValue" => $this->deductionValue,
             "paymentType" => $this->paymentType,
             "key" => $this->key->toArray(),
-            "writeOffQuantityDays" => $this->writeOffQuantityDays,
             "messages" => $this->messages,
         ];
+
+        if (isset($this->writeOffQuantityDays)) {
+            $array["writeOffQuantityDays"] = $this->writeOffQuantityDays;
+        }
+
+        return $array;
     }    
 
     public function setEnvironment($environment) { $this->environment = $environment; return $this; }

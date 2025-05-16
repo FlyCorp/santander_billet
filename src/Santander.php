@@ -6,22 +6,65 @@ use GuzzleHttp\Client;
 
 class Santander
 {
-    protected $client, $options;
+    protected $client, $options, $config;
 
-    public function __construct()
+    /**
+     * Construtor da classe Santander para integração com o serviço de boletos.
+     * 
+     * Permite a configuração dinâmica da conexão com a API do Santander, podendo receber
+     * parâmetros personalizados ou usar a configuração padrão do Laravel.
+     *
+     * @param array|null $config Array de configuração personalizada. Se null, usa a configuração padrão.
+     *                           Deve conter as seguintes chaves:
+     *                           - 'host': string - URL base da API do Santander
+     *                           - 'certificate_path': string - Caminho relativo (a partir de storage/) para o certificado P12
+     *                           - 'certificate_auth': string - Senha do certificado P12
+     *                           - 'client_id': string - Client ID para autenticação OAuth
+     *                           - 'client_secret': string - Client Secret para autenticação OAuth
+     * 
+     * @example 
+     * // Usando configuração padrão (do arquivo de configuração)
+     * new Santander();
+     * 
+     * @example
+     * // Usando configuração personalizada
+     * new Santander([
+     *     'host' => 'https://api-sandbox.santander.com.br',
+     *     'certificate_path' => 'certs/meu_certificado.p12',
+     *     'certificate_auth' => 'minha_senha_secreta',
+     *     'client_id' => 'meu-client-id-123',
+     *     'client_secret' => 'meu-client-secret-456'
+     * ]);
+     * 
+     * @throws \RuntimeException Se alguma configuração obrigatória estiver faltando
+     */
+    public function __construct(array $config = null)
     {
-        $certificatePath = storage_path(config('santander_billet.integrations.certificate_path'));
+        // Usa configuração padrão do arquivo de configuração se nenhuma for fornecida
+        $this->config = $config ?? config('santander_billet.integrations');
+        
+        // Valida as configurações mínimas necessárias
+        $requiredKeys = ['host', 'certificate_path', 'certificate_auth', 'client_id', 'client_secret'];
+        foreach ($requiredKeys as $key) {
+            if (!isset($this->config[$key])) {
+                throw new \RuntimeException("Configuração obrigatória '$key' não encontrada");
+            }
+        }
 
+        $certificatePath = storage_path($this->config['certificate_path']);
+
+        // Inicializa o cliente HTTP com as configurações de certificado
         $this->client = new Client([
-            'base_uri' => config('santander_billet.integrations.host'),
-            'cert' => [$certificatePath, config('santander_billet.integrations.certificate_auth')],
+            'base_uri' => $this->config['host'],
+            'cert' => [$certificatePath, $this->config['certificate_auth']],
             'curl' => [CURLOPT_SSLCERTTYPE => 'P12'],
         ]);
 
+        // Configura as opções padrão para autenticação OAuth
         $this->options = [
             'form_params' => [
-                'client_id' => config('santander_billet.integrations.client_id'),
-                'client_secret' => config('santander_billet.integrations.client_secret'),
+                'client_id' => $this->config['client_id'],
+                'client_secret' => $this->config['client_secret'],
                 'grant_type' => 'client_credentials'
             ]
         ];
@@ -49,15 +92,15 @@ class Santander
                 'success' => false,
                 'code' => $e->getResponse()->getStatusCode(),
                 'data' => $data
-                ];
-            } catch (\Exception $e) {
-                return [
-                    'success' => false,
-                    'code' => $e->getCode(),
-                    'message' => $e->getMessage(),
-                    ];
-                }
-            }
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
 
 
     private function retrieveToken()
