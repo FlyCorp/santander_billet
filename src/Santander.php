@@ -21,6 +21,8 @@ class Santander
      *                           - 'certificate_auth': string - Senha do certificado P12
      *                           - 'client_id': string - Client ID para autenticação OAuth
      *                           - 'client_secret': string - Client Secret para autenticação OAuth
+     * @param array|null $curlOptions Opções personalizadas para cURL. Se null, usa as opções padrão.
+     *                               Deve incluir CURLOPT_SSLCERTTYPE para especificar o tipo de certificado.
      * 
      * @example 
      * // Usando configuração padrão (do arquivo de configuração)
@@ -34,11 +36,15 @@ class Santander
      *     'certificate_auth' => 'minha_senha_secreta',
      *     'client_id' => 'meu-client-id-123',
      *     'client_secret' => 'meu-client-secret-456'
+     * ], [
+     *     CURLOPT_SSLCERTTYPE => 'P12',
+     *     CURLOPT_SSL_VERIFYHOST => 2
      * ]);
      * 
      * @throws \RuntimeException Se alguma configuração obrigatória estiver faltando
+     * @throws \InvalidArgumentException Se CURLOPT_SSLCERTTYPE não estiver nas opções cURL
      */
-    public function __construct(array $config = null)
+    public function __construct(array $config = null, array $curlOptions = null)
     {
         // Usa configuração padrão do arquivo de configuração se nenhuma for fornecida
         $this->config = $config ?? config('santander_billet.integrations');
@@ -53,11 +59,23 @@ class Santander
 
         $certificatePath = storage_path($this->config['certificate_path']);
 
+        // Configura as opções cURL - usa as personalizadas ou as padrão
+        $defaultCurlOptions = [
+            CURLOPT_SSLCERTTYPE => 'P12',
+        ];
+        
+        $finalCurlOptions = $curlOptions ?? $defaultCurlOptions;
+        
+        // Valida se CURLOPT_SSLCERTTYPE está presente
+        if (!array_key_exists(CURLOPT_SSLCERTTYPE, $finalCurlOptions)) {
+            throw new \InvalidArgumentException("A opção CURLOPT_SSLCERTTYPE é obrigatória nas configurações cURL");
+        }
+
         // Inicializa o cliente HTTP com as configurações de certificado
         $this->client = new Client([
             'base_uri' => $this->config['host'],
             'cert' => [$certificatePath, $this->config['certificate_auth']],
-            'curl' => [CURLOPT_SSLCERTTYPE => 'P12'],
+            'curl' => $finalCurlOptions,
         ]);
 
         // Configura as opções padrão para autenticação OAuth
