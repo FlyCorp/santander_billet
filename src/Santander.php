@@ -21,7 +21,6 @@ class Santander
      *                           - 'certificate_auth': string - Senha do certificado P12
      *                           - 'client_id': string - Client ID para autenticação OAuth
      *                           - 'client_secret': string - Client Secret para autenticação OAuth
-     *                           - 'ssl_key': string - Caminho relativo (a partir de storage/) para o arquivo contendo a chave SSL (opcional)
      * @param array|null $curlOptions Opções personalizadas para cURL. Se null, usa as opções padrão.
      *                               Deve incluir CURLOPT_SSLCERTTYPE para especificar o tipo de certificado.
      * 

@@ -79,7 +79,6 @@ Pacote responsável por gerar boletos com opção PIX via API do Santander
     SANTANDER_BILLET_CLIENT_SECRET=
     SANTANDER_BILLET_CERTIFICATE_AUTH=
     SANTANDER_BILLET_CERTIFICATE_PATH=
-    SANTANDER_BILLET_CERTIFICATE_SSL_KEY=
     ```
 
     Descrição das variáveis:
@@ -89,7 +88,6 @@ Pacote responsável por gerar boletos com opção PIX via API do Santander
     -   `SANTANDER_BILLET_CLIENT_SECRET`: Valor do client_secret fornecido pelo Santander
     -   `SANTANDER_BILLET_CERTIFICATE_AUTH`: Senha do certificado
     -   `SANTANDER_BILLET_CERTIFICATE_PATH`: Caminho do certificado em formato pfx/pem dentro da pasta Storage
-    -   `SANTANDER_BILLET_CERTIFICATE_SSL_KEY`:  Caminho relativo (a partir de storage/) para o arquivo contendo a chave SSL (opcional)
 
 3.  ## Instanciar classe Santander
 
