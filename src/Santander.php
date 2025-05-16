@@ -17,10 +17,11 @@ class Santander
      * @param array|null $config Array de configuração personalizada. Se null, usa a configuração padrão.
      *                           Deve conter as seguintes chaves:
      *                           - 'host': string - URL base da API do Santander
-     *                           - 'certificate_path': string - Caminho relativo (a partir de storage/) para o certificado P12
+     *                           - 'certificate_path': string - Caminho relativo (a partir de storage/) para o certificado P12/PEM
      *                           - 'certificate_auth': string - Senha do certificado P12
      *                           - 'client_id': string - Client ID para autenticação OAuth
      *                           - 'client_secret': string - Client Secret para autenticação OAuth
+     *                           - 'ssl_key': string - Caminho relativo (a partir de storage/) para o arquivo contendo a chave SSL (opcional)
      * @param array|null $curlOptions Opções personalizadas para cURL. Se null, usa as opções padrão.
      *                               Deve incluir CURLOPT_SSLCERTTYPE para especificar o tipo de certificado.
      * 
@@ -32,7 +33,7 @@ class Santander
      * // Usando configuração personalizada
      * new Santander([
      *     'host' => 'https://api-sandbox.santander.com.br',
-     *     'certificate_path' => 'certs/meu_certificado.p12',
+     *     'certificate_path' => 'certs/meu_certificado.pfx',
      *     'certificate_auth' => 'minha_senha_secreta',
      *     'client_id' => 'meu-client-id-123',
      *     'client_secret' => 'meu-client-secret-456'
@@ -71,12 +72,18 @@ class Santander
             throw new \InvalidArgumentException("A opção CURLOPT_SSLCERTTYPE é obrigatória nas configurações cURL");
         }
 
-        // Inicializa o cliente HTTP com as configurações de certificado
-        $this->client = new Client([
+        $clientConfig = [
             'base_uri' => $this->config['host'],
             'cert' => [$certificatePath, $this->config['certificate_auth']],
             'curl' => $finalCurlOptions,
-        ]);
+        ];
+        // Adiciona a chave SSL se estiver configurada caso o formato do certificado não seja P12 e sim PEM
+        if(isset($this->config['ssl_key'])){
+            $clientConfig['ssl_key'] = storage_path($this->config['ssl_key']);
+        }
+
+        // Inicializa o cliente HTTP com as configurações de certificado
+        $this->client = new Client($clientConfig);
 
         // Configura as opções padrão para autenticação OAuth
         $this->options = [
