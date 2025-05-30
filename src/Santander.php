@@ -129,11 +129,11 @@ class Santander
 
     private function token()
     {
-        $cached = cache()->get('SANTANDER_BILLET_RESPONSE');
+        $cached = cache()->get($this->config['client_id']);
 
         return $cached
         ? $cached
-        :cache()->remember('SANTANDER_BILLET_RESPONSE', now()->addSeconds(900), function(){
+        :cache()->remember($this->config['client_id'], now()->addSeconds(900), function(){
 
             $response = self::retrieveToken();
 
