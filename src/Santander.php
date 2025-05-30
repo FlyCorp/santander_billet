@@ -150,7 +150,7 @@ class Santander
         $tokenData = self::token();
 
         return [
-            "X-Application-Key" => config('santander_billet.integrations.client_id'),
+            "X-Application-Key" => $this->config['client_id'] ?? config('santander_billet.integrations.client_id'),
             "Authorization" => "Bearer {$tokenData['access_token']}",
         ];
     }
