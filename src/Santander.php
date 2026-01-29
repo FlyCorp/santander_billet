@@ -68,6 +68,11 @@ class Santander
             'base_uri' => $this->config['host'],
             'curl' => $curlOptions,
         ];
+
+        if (!app()->environment('production')) {
+            $clientConfig['verify'] = false;
+        }
+        
         // Adiciona a chave SSL se estiver configurada caso o formato do certificado não seja P12 e sim PEM
         if($curlOptions[CURLOPT_SSLCERTTYPE] !== 'P12' && isset($this->config['ssl_key'])) {
             $clientConfig['cert'] = $certificatePath;
